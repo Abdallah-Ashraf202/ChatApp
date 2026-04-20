@@ -1,0 +1,232 @@
+### ChatApp API Test File
+### Run these requests top-to-bottom in order.
+### VS Code: install "REST Client" extension by Humao to run .http files.
+### Visual Studio: built-in HTTP client supports this natively.
+
+@host = https://localhost:7000
+
+### ─────────────────────────────────────────────────────────────
+### 1. REGISTER — User A (Alice)
+### ─────────────────────────────────────────────────────────────
+# @name registerAlice
+POST {{host}}/api/users/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@chat.com",
+  "password": "Alice123!",
+  "role": 0,
+  "gender": 0
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 2. REGISTER — User B (Bob)
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/users/register
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "email": "bob@chat.com",
+  "password": "Bob123!",
+  "role": 0,
+  "gender": 0
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 3. VERIFY EMAIL
+###    Copy the token printed in the response body from step 1 & 2
+###    (in dev mode the token is returned in the response string)
+### ─────────────────────────────────────────────────────────────
+@aliceToken = PASTE_ALICE_VERIFICATION_TOKEN_HERE
+GET {{host}}/api/users/verify?token={{aliceToken}}
+
+###
+
+@bobToken = PASTE_BOB_VERIFICATION_TOKEN_HERE
+GET {{host}}/api/users/verify?token={{bobToken}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 4. LOGIN — Alice  →  copy the "token" value into @aliceJwt
+### ─────────────────────────────────────────────────────────────
+# @name loginAlice
+POST {{host}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "alice@chat.com",
+  "password": "Alice123!"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 5. LOGIN — Bob  →  copy the "token" value into @bobJwt
+### ─────────────────────────────────────────────────────────────
+# @name loginBob
+POST {{host}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "bob@chat.com",
+  "password": "Bob123!"
+}
+
+###
+
+### ── Paste your JWTs here after logging in ──────────────────────
+@aliceJwt = PASTE_ALICE_JWT_HERE
+@bobJwt   = PASTE_BOB_JWT_HERE
+
+### ─────────────────────────────────────────────────────────────
+### 6. GET all users (no auth needed)
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/users
+Accept: application/json
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 7. CREATE a Chat Room  (Alice creates "General")
+###    Alice is auto-joined as admin.
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/chatroom
+Content-Type: application/json
+Authorization: Bearer {{aliceJwt}}
+
+{
+  "name": "General",
+  "description": "General discussion"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 8. CREATE a second Chat Room  (Alice creates "Random")
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/chatroom
+Content-Type: application/json
+Authorization: Bearer {{aliceJwt}}
+
+{
+  "name": "Random",
+  "description": "Off-topic chatter"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 9. GET all chat rooms (lists all rooms + member count)
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/chatroom
+Authorization: Bearer {{aliceJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 10. GET Alice's rooms  (should show both rooms she created)
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/chatroom/my
+Authorization: Bearer {{aliceJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 11. Bob JOINS room 1 (General)
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/chatroom/1/join
+Authorization: Bearer {{bobJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 12. GET Bob's rooms  (should show "General")
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/chatroom/my
+Authorization: Bearer {{bobJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 13. Alice SENDS a message to room 1
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/message
+Content-Type: application/json
+Authorization: Bearer {{aliceJwt}}
+
+{
+  "chatRoomId": 1,
+  "content": "Hey everyone! 👋"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 14. Bob SENDS a message to room 1
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/message
+Content-Type: application/json
+Authorization: Bearer {{bobJwt}}
+
+{
+  "chatRoomId": 1,
+  "content": "Hi Alice! Great to be here 😄"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 15. GET messages in room 1  (paginated, newest first)
+###     ?page=1&pageSize=50
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/message/1?page=1&pageSize=50
+Authorization: Bearer {{aliceJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 16. DELETE a message  (sender or Admin only)
+###     Replace {id} with an actual message ID from step 15
+### ─────────────────────────────────────────────────────────────
+DELETE {{host}}/api/message/1
+Authorization: Bearer {{aliceJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 17. Bob TRIES to send to room 2 (Random) — should get 403
+###     because Bob never joined "Random"
+### ─────────────────────────────────────────────────────────────
+POST {{host}}/api/message
+Content-Type: application/json
+Authorization: Bearer {{bobJwt}}
+
+{
+  "chatRoomId": 2,
+  "content": "Can I talk here?"
+}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 18. Bob LEAVES room 1 (General)
+### ─────────────────────────────────────────────────────────────
+DELETE {{host}}/api/chatroom/1/leave
+Authorization: Bearer {{bobJwt}}
+
+###
+
+### ─────────────────────────────────────────────────────────────
+### 19. GET room 1 details
+### ─────────────────────────────────────────────────────────────
+GET {{host}}/api/chatroom/1
+Authorization: Bearer {{aliceJwt}}
+
+###

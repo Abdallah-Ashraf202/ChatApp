@@ -1,0 +1,32 @@
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# application settings (Sensitive info)
+appsettings.json
+appsettings.Development.json
+appsettings.*.json
+
+# Visual Studio cache/options directory
+.vs/
+
+# Mac OS
+.DS_Store
