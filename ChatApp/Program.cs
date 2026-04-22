@@ -73,6 +73,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Seed Database for Testing
+using (var scope = app.Services.CreateScope())
+{
+    // Try to seed the DB (it skips if it's already seeded)
+    await ChatApp.Data.DbSeeder.SeedAsync(scope.ServiceProvider);
+}
+
 // ── Middleware pipeline ───────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
