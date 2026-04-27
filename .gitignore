@@ -31,3 +31,4 @@ appsettings.*.json
 # Mac OS
 .DS_Store
 signalr_explanation.md
+UNIT_TESTS_EXPLANATION.md
