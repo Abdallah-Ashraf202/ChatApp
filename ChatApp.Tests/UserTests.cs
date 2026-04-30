@@ -42,7 +42,7 @@ namespace ChatApp.Tests
             Assert.Empty(user.Email);
             Assert.Empty(user.PasswordHash);
             Assert.Null(user.VerificationToken);
-            
+
             // Dates can be tricky to test, but we can verify it was set very recently
             var timeDifference = DateTime.UtcNow - user.CreatedAt;
             Assert.True(timeDifference.TotalSeconds < 1, "CreatedAt should be set to current UTC time upon creation");
@@ -58,7 +58,7 @@ namespace ChatApp.Tests
             // Navigation properties (lists) should be initialized to empty lists, not null, to prevent NullReferenceExceptions
             Assert.NotNull(user.UserChatRooms);
             Assert.Empty(user.UserChatRooms);
-            
+
             Assert.NotNull(user.Messages);
             Assert.Empty(user.Messages);
         }

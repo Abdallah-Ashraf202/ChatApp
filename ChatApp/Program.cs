@@ -23,13 +23,14 @@ builder.Services.AddDbContext<ChatAppDbContext>(options =>
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ChatRoomService>();
 builder.Services.AddScoped<MessageService>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 // ── JWT Authentication ────────────────────────────────────────────────────
 // NOTE: appsettings.json uses the lowercase "jwt" key; reading it in a
 //       case-insensitive way so either casing works.
 var jwtSection = builder.Configuration.GetSection("jwt");
-var jwtKey     = jwtSection["Key"]     ?? throw new InvalidOperationException("jwt:Key is missing from appsettings.");
-var jwtIssuer  = jwtSection["Issuer"]  ?? "ChatApp";
+var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("jwt:Key is missing from appsettings.");
+var jwtIssuer = jwtSection["Issuer"] ?? "ChatApp";
 var jwtAudience = jwtSection["Audience"] ?? "ChatAppUsers";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -37,13 +38,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer              = jwtIssuer,
-            ValidAudience            = jwtAudience,
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
 
         // Allow SignalR to receive the token from the query string
@@ -83,7 +84,7 @@ using (var scope = app.Services.CreateScope())
 // ── Middleware pipeline ───────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
-
+app.UseStaticFiles();
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();

@@ -3,8 +3,10 @@ using ChatApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using ChatApp.Hubs;
 namespace ChatApp.Controllers;
+using Microsoft.AspNetCore.SignalR;
+
 
 [Route("api/[controller]")]
 [ApiController]
@@ -41,7 +43,8 @@ public class MessageController : ControllerBase
     // ── POST: api/message ──────────────────────────────────────────────────
     /// <summary>Posts a message to a chat room the caller is a member of.</summary>
     [HttpPost]
-    public async Task<ActionResult<MessageResponseDTO>> SendMessage([FromBody] SendMessageDTO dto)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<MessageResponseDTO>> SendMessage([FromForm] SendMessageDTO dto)
     {
         try
         {

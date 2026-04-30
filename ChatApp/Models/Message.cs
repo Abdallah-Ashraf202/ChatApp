@@ -6,10 +6,12 @@ public class Message
 {
     public int Id { get; set; }
 
-    [Required]
     [MaxLength(2000)]
-    public string Content { get; set; } = string.Empty;
-    
+    public string? Content { get; set; } = string.Empty; // text
+
+    public string? MediaUrl { get; set; } = string.Empty; // image path
+
+
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
     // Foreign keys

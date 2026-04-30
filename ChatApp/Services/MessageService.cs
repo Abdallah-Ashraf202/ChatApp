@@ -1,5 +1,7 @@
 using ChatApp.DTOs;
+using ChatApp.Hubs;
 using ChatApp.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Services;
@@ -7,10 +9,14 @@ namespace ChatApp.Services;
 public class MessageService
 {
     private readonly ChatAppDbContext _context;
+    private readonly IFileService _fileService;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public MessageService(ChatAppDbContext context)
+    public MessageService(ChatAppDbContext context, IFileService fileService, IHubContext<ChatHub> hubContext)
     {
         _context = context;
+        _fileService = fileService;
+        _hubContext = hubContext;
     }
 
     /// <summary>Returns all messages in a room, newest first, with sender username.</summary>
@@ -28,6 +34,7 @@ public class MessageService
                 UserId = m.UserId,
                 Username = m.User.Username,
                 Content = m.Content,
+                MediaUrl = m.MediaUrl,
                 SentAt = m.SentAt
             })
             .ToListAsync();
@@ -42,14 +49,23 @@ public class MessageService
 
         if (!isMember)
             throw new UnauthorizedAccessException("You are not a member of this chat room.");
+        string? mediaUrl = null;
+
+        if (dto.Media != null)
+        {
+            mediaUrl = await _fileService.SaveFileAsync(dto.Media);
+        }
 
         var message = new Message
         {
             UserId = senderId,
             ChatRoomId = dto.ChatRoomId,
             Content = dto.Content,
+            MediaUrl = mediaUrl,
             SentAt = DateTime.UtcNow
         };
+
+
 
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
@@ -60,15 +76,21 @@ public class MessageService
             .Select(u => u.Username)
             .FirstAsync();
 
-        return new MessageResponseDTO
+        var responseDto = new MessageResponseDTO
         {
             Id = message.Id,
             ChatRoomId = message.ChatRoomId,
             UserId = message.UserId,
             Username = username,
             Content = message.Content,
+            MediaUrl = message.MediaUrl,
             SentAt = message.SentAt
         };
+
+        // Broadcast to all clients in the room
+        await _hubContext.Clients.Group($"room_{dto.ChatRoomId}").SendAsync("ReceiveMessage", responseDto);
+
+        return responseDto;
     }
 
     // Deletes a message. Only the original sender or an Admin may delete.</summary>
